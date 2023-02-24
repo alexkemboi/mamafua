@@ -1,54 +1,39 @@
-const apiKey =
-  "98d2e58a8af8bc90737ebdb83a862ab467d6fa19f8986cfa70ea7689286cc6d6";
-const username = "alexkemboi97";
+const africastalking = require("africastalking")({
+  apiKey: "bc2699fb58d81d07784e273e3e2485f10e788dbe68e67ecbc53d5a54647b2cf8",
+  username: "alexkemboi97",
+});
 
 const express = require("express");
 const bodyParser = require("body-parser");
+const axios = require("axios");
 
 const app = express();
-app.use(bodyParser.json());
+// app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(axios);
 
-const africastalking = require("africastalking")({ username, apiKey });
 const voice = africastalking.VOICE;
 
-const options = {
-  from: "+254726837210",
-  to: "+254711082571 ",
-  callBackUrl: "https://de2c-41-139-168-163.eu.ngrok.io/dtmf_callback",
-};
+app.post("/call", (req, res) => {
+  console.log(req.body);
+  // const callFrom = req.body.callFrom;
+  // const callTo = req.body.callTo;
+  // const sessionId = req.body.sessionId;
+  const options = {
+    callFrom: req.body.callFrom,
+    callTo: req.body.callTo,
+  };
+  let response = '<?xml version="1.0" encoding="UTF-8"?>';
+  response += "<Response>";
+  response +=
+    '<GetDigits timeout="20" callbackUrl="https://e6dc-41-90-65-190.in.ngrok.io/call">';
+  response += "<Say>Please press 1 to continue</Say>";
+  response += "</GetDigits>";
+  response += "</Response>";
 
-app.post("/dtmf_callback", (req, res) => {
-  const data = req.body;
-  console.log(data);
-
-  voice.emit("onDtmfReceived", data);
-
-  res.sendStatus(200);
+  voice.call(options).then(console.log(req.body)).catch(console.log);
 });
 
-voice
-  .call(options)
-  .then((result) => {
-    console.log(result);
-
-    const sessionId = result.data.sessionId;
-
-    voice.on("onDtmfReceived", (data) => {
-      const dtmf = data.dtmfDigit;
-      console.log(`DTMF digit received: ${dtmf}`);
-      if (dtmf === "1") {
-        // do something if the user pressed 1
-      } else if (dtmf === "2") {
-        // do something if the user pressed 2
-      } else {
-        // handle invalid input
-      }
-    });
-  })
-  .catch((error) => {
-    console.error(error);
-  });
-
-app.listen(3000, () => {
-  console.log("Webhook listening on port 3000");
+app.listen(80, () => {
+  console.log("Webhook listening on port 80");
 });
